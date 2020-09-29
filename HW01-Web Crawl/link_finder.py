@@ -1,21 +1,24 @@
-from html.parser import HTMLParser
-from urllib import parse
+import re
 
 
-class LinkFinder(HTMLParser):
+# Get all links from html page
+def get_all_links(contents):
+    all_links = set()
+    pattern = '<a href="([^"]*)"'
+    result = re.findall(pattern, contents)
+    for link in result:
+        if not link.startswith("http") and link.startswith("/wiki"):
+            link = "https://en.wikipedia.org" + link
+        if is_valid_links(link) and "Main_Page" not in link and len(link.split(":")) == 2:
+            all_links.add(link)
 
-    def __init__(self, base_url, page_url):
-        super().__init__()
-        self.base_url = base_url
-        self.page_url = page_url
-        self.links = set()
+    return all_links
 
-    # When we call HTMLParser feed() this function is called when it encounters an opening tag <a>
-    # Using Regular Expression to ignore the following links
-    # Main_Page url, or url with a colon
-    def handle_starttag(self, tag, attrs):
-        if tag == 'a':
-            for (attribute, value) in attrs:
-                if attribute == 'href':
-                    url = parse.urljoin(self.base_url, value)
-                    self.links.add(url)
+
+# Check if the link format is valid
+def is_valid_links(link):
+    pattern = "[http, https].*en.wikipedia.org/wiki/.*"
+    if re.match(pattern, link):
+        return True
+    else:
+        return False

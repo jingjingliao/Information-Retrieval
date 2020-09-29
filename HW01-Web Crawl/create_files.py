@@ -11,3 +11,9 @@ def create_project_dir(directory):
 def write_file(path, data):
     with open(path, 'w') as f:
         f.write(data)
+
+
+# Add data onto an existing file
+def append_to_file(path, data):
+    with open(path, 'a') as file:
+        file.write(data + '\n')

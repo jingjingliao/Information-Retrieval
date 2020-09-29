@@ -1,18 +1,20 @@
 import urllib.request
 from link_finder import *
-from domain import *
 from create_files import *
+import sys
 
 
 # Logic to crawl one page
-def crawl_page(base_url, page_url, depth, crawled, queue, PROJECT_NAME):
+def crawl_page(base_url, page_url, depth, crawled, queue, PROJECT_NAME, bytes_size_lists):
     if page_url not in crawled:
-        crawled.add(page_url)
-        contents = str((urllib.request.urlopen(page_url)).read())
+        crawled.append(page_url)
+        total_bytes = urllib.request.urlopen(page_url).read()
+        bytes_size = sys.getsizeof(total_bytes)
+        bytes_size_lists.append(bytes_size)
+        contents = str(total_bytes)
         create_crawled_files(crawled, contents, PROJECT_NAME)
-        parser = LinkFinder(base_url, page_url)
-        parser.feed(contents)
-        put_links_in_queue(parser.links, queue, depth, base_url, crawled)
+        all_links = get_all_links(contents)
+        put_links_in_queue(all_links, queue, depth, base_url, crawled)
 
 
 def create_crawled_files(crawled, contents, PROJECT_NAME):
@@ -23,13 +25,5 @@ def create_crawled_files(crawled, contents, PROJECT_NAME):
 
 def put_links_in_queue(links, queue, depth, base_url, crawled):
     for link in links:
-        if is_valid_link(link, base_url) and link not in queue and link not in crawled:
+        if link not in queue and link not in crawled:
             queue.append([link, depth + 1])
-
-
-def is_valid_link(link, base_url):
-    base_sub_domain_name = get_sub_domain_name(base_url)
-    path = get_path(link)
-    if (link.startswith("https") or link.startswith("http")) and (get_sub_domain_name(link) == base_sub_domain_name) and ("Main_Page" not in path and ":" not in path):
-        return True
-    return False
